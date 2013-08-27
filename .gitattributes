@@ -1,2 +1,2 @@
 # Normalize line endings
-*html text eol=lf
+*html text eol=crlf

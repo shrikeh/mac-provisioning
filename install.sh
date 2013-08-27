@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Colour _echo to make it easier to read
 function _echo () {
     echo "\n" $(tput bold) $(tput setaf 1) ${1} $(tput sgr0) "\n";
@@ -21,16 +21,14 @@ SSH_PARANOIA=2048
 OSX_GCC_TARGET=${4:-"/"}
 
 # Check we aren't runniing as root as this will mess everything up"
-if [[ $EUID = 0 ]]; 
-then
+if [[ $EUID = 0 ]]; then
    $ECHO "This script must not be run as root" 1>&2;
    exit 1;
 fi
 
 $ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue? (y/n)"
 read -n 1 -r;
-if [[ ! $REPLY =~ ^[Yy]$ ]]; 
-then
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1;
 fi
 
@@ -41,8 +39,7 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 $ECHO "Do you wish to generate a new SSH key? (y/n)";
 read -n 1 -r;
     # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]];
-then
+if [[ $REPLY =~ ^[Yy]$ ]]; then
     ssh-keygen -trsa -b${SSH_PARANOIA};
 fi
 
@@ -56,8 +53,7 @@ sudo installer -pkg ${LOCAL_REPO_DIR}/clt/clt-ml.pkg -target ${OSX_GCC_TARGET};
 
 
 # Get hold of Ruby
-if command_exists "rvm"; 
-then
+if command_exists "rvm"; then
     $ECHO "Existing RVM found , moving on";
 else
   $ECHO "Getting hold of latest stable Ruby RVM";
@@ -69,8 +65,7 @@ else
 fi
 
 # Get hold of Homebrew
-if command_exists "brew";
-then
+if command_exists "brew"; then
     $ECHO "Detected existing install of Homebrew, moving on...";
 else
     $ECHO "Getting Homebrew";
@@ -83,18 +78,17 @@ $ECHO "Installing Heroku (gives you Git etc)";
 brew install --force heroku-toolbelt;
 
 $ECHO "Configuring git"
-if ! git config user.email;
-then
+git config --global core.autocrlf input
+if ! git config user.email; then
   $ECHO "Please input your email address"
   read email;
   git config --global user.email ${email};
 fi
-if ! git config user.name;
-then
+if ! git config user.name; then
   $ECHO "Please input your first and last name";
   read first_name last_name;
   git config --global user.name "${first_name} ${last_name}";
-fi
+fi;
 
 brew install --force wget libksba autoconf gmp4 gmp mpfr mpc automake;
 
@@ -116,8 +110,7 @@ source $HOME/.zshrc
 $ECHO "Installing slick git tools";
 brew install --force gist hub hubflow
 pip install git_sweep
-if [ ! -f ${HOME}/.config/hub ];
-then
+if [ ! -f ${HOME}/.config/hub ]; then
   $ECHO "Please input your github username"
   read username
   mkdir ${HOME}/.config
