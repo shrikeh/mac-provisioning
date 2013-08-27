@@ -5,6 +5,7 @@ function _echo () {
     blue=$(tput setaf 4)
     normal=$(tput sgr0)
     \printf "\n%40s\n\n" "${blue} ${1} ${normal}";
+    clrstdin;
     return 0;
   } <&-
 }
@@ -20,7 +21,7 @@ function clrstdin () {
   return 0;
 }
 
-ECHO=_echo
+ECHO=echo
 REPO_BRANCH=${1:-"master"}
 
 REPO_URI=${2:-"https://github.com/shrikeh/mac-provisioning/archive/${REPO_BRANCH}.zip"}
@@ -41,7 +42,6 @@ fi
 {
   ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
 } <&-
-clrstdin
 
 while \read -r -n 1 answer; do
   if [[ ${answer} = [YyNn] ]]; then
