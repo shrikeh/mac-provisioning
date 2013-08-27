@@ -26,8 +26,8 @@ if [[ $EUID = 0 ]]; then
    exit 1;
 fi
 
-$ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue? (y/n)"
-read -n 1 -r;
+$ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?"
+read -r -s -e -p "(y/n) > " -n 1 REPLY
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     exit 1;
 fi
@@ -36,8 +36,9 @@ fi
 $ECHO "Making all hidden files visible in Finder"
 defaults write com.apple.Finder AppleShowAllFiles YES
 
-$ECHO "Do you wish to generate a new SSH key? (y/n)";
-read -n 1 -r;
+
+$ECHO "Do you wish to generate a new SSH key?";
+read -r -s -e -p "(y/n) > " -n 1 REPLY
     # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     ssh-keygen -trsa -b${SSH_PARANOIA};
