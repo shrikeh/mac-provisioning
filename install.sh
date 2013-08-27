@@ -21,7 +21,7 @@ function clrstdin () {
   return 0;
 }
 
-ECHO=echo
+ECHO=_echo
 REPO_BRANCH=${1:-"master"}
 
 REPO_URI=${2:-"https://github.com/shrikeh/mac-provisioning/archive/${REPO_BRANCH}.zip"}
@@ -43,7 +43,7 @@ fi
   ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
 } <&-
 
-while \read -r -n 1 answer; do
+while \read -e -r -n 1 answer; do
   if [[ ${answer} = [YyNn] ]]; then
     if [[ ! ${answer} =~ ^[Yy]$ ]]; then
       ${ECHO} "You selected ${answer} so exiting"
