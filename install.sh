@@ -16,7 +16,7 @@ function command_exists () {
 }
 
 function clrstdin () {
-  \read -d '' -t 0.1 -n 10000
+  \read -d '' -t 1 -n 10000
 }
 
 ECHO=_echo
