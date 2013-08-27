@@ -41,7 +41,7 @@ ${ECHO} "This script requires sudo privileges. You will be prompted for your pas
 } <&-
 clrstdin
 while \read -r -n 1 -s answer; do
-  if [[ ${answer} = [YyNn] ]]; then
+  if [[ ${answer} == [YyNn] ]]; then
     if [[ ! ${answer} =~ ^[Yy]$ ]]; then
       $ECHO "You selected ${answer} so exiting"
       exit 1;
@@ -57,8 +57,8 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 
 ${ECHO} "Do you wish to generate a new SSH key?";
 clrstdin
-while \read  -r -n 1 -s answer; do
-  if [[ ${answer} = [YyNn] ]]; then
+while \read -r -n 1 -s answer; do
+  if [[ ${answer} == [YyNn] ]]; then
     if [[ ${answer} =~ ^[Yy]$ ]]; then
       ssh-keygen -t rsa -b ${SSH_PARANOIA} -N "" -f ${HOME}/.ssh/id_rsa;
       $ECHO "New ssh key generated with ${SSH_PARANOIA} bits and no passphrase"
