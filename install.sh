@@ -50,6 +50,7 @@ while \read -r -n 1 answer; do
   fi
 done
 
+${ECHO} "OK, on with the show..."
 # Show all hidden files on a mac
 $ECHO "Making all hidden files visible in Finder"
 defaults write com.apple.Finder AppleShowAllFiles YES
