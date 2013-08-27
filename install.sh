@@ -27,12 +27,15 @@ if [[ $EUID = 0 ]]; then
 fi
 
 $ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
-\read -r  -e -p "(y/n) > " -n 1 cont
-
-if [[ ! ${cont} =~ ^[Yy]$ ]]; then
-    $ECHO "You selected ${cont} so exiting"
-    exit 1;
-fi
+while \read  -r -n 1 -s answer; do
+  if [[ ${answer} = [YyNn] ]]; then
+    if [[ ! ${answer} =~ ^[Yy]$ ]]; then
+      $ECHO "You selected ${answer} so exiting"
+      exit 1;
+    fi
+    break;
+  fi
+done
 
 # Show all hidden files on a mac
 $ECHO "Making all hidden files visible in Finder"
@@ -40,25 +43,29 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 
 
 $ECHO "Do you wish to generate a new SSH key?";
-\read -r -s -e -p "(y/n) > " -n 1 sshgen
-
-# (optional) move to a new line;
-
-if [[ ${sshgen} =~ ^[Yy]$ ]]; then
-    ssh-keygen -t rsa -b ${SSH_PARANOIA};
-fi
+while \read  -r -n 1 -s answer; do
+  if [[ ${answer} = [YyNn] ]]; then
+    if [[ ${answer} =~ ^[Yy]$ ]]; then
+      ssh-keygen -t rsa -b ${SSH_PARANOIA} -N "" -f ${HOME}/.ssh/id_rsa;
+      $ECHO "New ssh key generated with ${SSH_PARANOIA} bits and no passphrase"
+    fi
+    break;
+  fi
+done
 
 # Is this running remotely (i.e. with curl and piped to sh) or has this been downloaded?
 # If not downloaded, we need to get the rest of the archive
 # @todo: check locally if we are in a folder containing the CLT
 
-$ECHO "Downloading Mac OSX Command Tools for Mountain Lion"
-
-\curl -fsSL -o ${ZIP_TARGET} ${REPO_URI};
- 
+if [[ ! -e ${ZIP_TARGET} ]]; then
+  $ECHO "Downloading Mac OSX Command Tools for Mountain Lion"
+  \curl -fsSL -o ${ZIP_TARGET} ${REPO_URI};
+fi 
+$ECHO "Unzipping Command line tools into your Downloads dir"
 unzip -o ${ZIP_TARGET} -d ${HOME}/Downloads;
+$ECHO "Installing command line tools, please wait..."
 sudo installer -pkg ${LOCAL_REPO_DIR}/clt/clt-ml.pkg -target ${OSX_GCC_TARGET};
-
+$ECHO "CLT installed"
 
 # Get hold of Ruby
 if command_exists "rvm"; then
@@ -89,13 +96,15 @@ $ECHO "Configuring git"
 git config --global core.autocrlf input
 if ! git config user.email; then
   $ECHO "Please input your email address"
-  read email;
-  git config --global user.email ${email};
+  while \read -r email; do
+    git config --global user.email ${email};
+  done;
 fi
 if ! git config user.name; then
   $ECHO "Please input your first and last name";
-  read first_name last_name;
-  git config --global user.name "${first_name} ${last_name}";
+  while \read -r first_name last_name; do
+    git config --global user.name "${first_name} ${last_name}";
+  done;
 fi;
 
 brew install --force wget libksba autoconf gmp4 gmp mpfr mpc automake;
@@ -111,19 +120,19 @@ brew install --force ssh-copy-id
 $ECHO "Getting zsh"
 brew install zsh zsh-completions;
 curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
-echo "fpath=(/usr/local/share/zsh-completions \$fpath)" >> $HOME/.zshrc
+echo "fpath=(/usr/local/share/zsh-completions \$fpath)" >> ${HOME}/.zshrc
 
-source $HOME/.zshrc
 
 $ECHO "Installing slick git tools";
 brew install --force gist hub hubflow
 pip install git_sweep
 if [ ! -f ${HOME}/.config/hub ]; then
   $ECHO "Please input your github username"
-  read username
-  mkdir ${HOME}/.config
-  echo "eval \"\$(hub alias -s)\"" >> ${HOME}/.zshrc
-  echo "github.com: \n  - user: ${username}" > ${HOME}/.config/hub
+  while \read -r username; do
+    mkdir ${HOME}/.config
+    echo "eval \"\$(hub alias -s)\"" >> ${HOME}/.zshrc
+    echo "github.com: \n  - user: ${username}" > ${HOME}/.config/hub
+  done;
 fi
 
 $ECHO "Installing PHP..."
@@ -133,6 +142,10 @@ brew untap josegonzalez/homebrew-php
 brew tap josegonzalez/homebrew-php
 brew update
 brew install --force php55
+
+echo "export PATH=\"\$(brew --prefix php55)/bin:$PATH\"" >> ${HOME}/.zshrc
+
+source ${HOME}/.zshrc
 
 $ECHO "Getting composer"
 \curl -sS https://getcomposer.org/installer | php
@@ -152,7 +165,7 @@ brew update;
 $ECHO "Reading through the Cask manifest"
 while read app; do
   $ECHO "Installing ${app}"
-  brew cask install --force ${app};
+  brew cask install ${app};
 done < ${LOCAL_REPO_DIR}/manifest.txt
 
 brew linkapps;
