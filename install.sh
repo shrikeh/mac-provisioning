@@ -17,7 +17,6 @@ function command_exists () {
 
 function clrstdin () {
   \read -d '' -t 1 -n 10000
-  return 0;
 }
 
 ECHO=_echo
@@ -32,13 +31,13 @@ OSX_GCC_TARGET=${4:-"/"}
 ${ECHO} "Welcome to the Mac provisioning script. Press [ENTER] to continue"
 \read -r
 
-# Check we aren't runniing as root as this will mess everything up"
+# Check we aren't runniing as root as this will mess everything up
 if [[ $EUID = 0 ]]; then
    ${ECHO} "This script must not be run as root" 1>&2;
    exit 1;
 fi
 {
-${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
+  ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
 } <&-
 clrstdin
 while \read -r -n 1 answer; do
@@ -54,7 +53,6 @@ done
 # Show all hidden files on a mac
 $ECHO "Making all hidden files visible in Finder"
 defaults write com.apple.Finder AppleShowAllFiles YES
-
 
 ${ECHO} "Do you wish to generate a new SSH key?";
 clrstdin
