@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Colour _echo to make it easier to read
 function _echo () {
-    \echo "\n" $(tput bold) $(tput setaf 1) ${1} $(tput sgr0) "\n";
-    return 0;
+  blue=$(tput setaf 4)
+  normal=$(tput sgr0)
+  \printf "\n%40s\n\n" "${blue} ${1} ${normal}";
+  return 0;
 }
 
 function command_exists () {
