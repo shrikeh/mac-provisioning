@@ -27,6 +27,8 @@ elif tty >/dev/null; then
   echo 1>&2 'Cowardly refusing to read data from a terminal.'
   exit 2
 # else we're reading from a file or pipe
+else
+  echo "Piped"
 fi
 
 ECHO=_echo
