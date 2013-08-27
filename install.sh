@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Colour _echo to make it easier to read
 function _echo () {
   {
