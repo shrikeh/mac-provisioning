@@ -2,6 +2,7 @@
 # Colour _echo to make it easier to read
 function _echo () {
     \echo "\n" $(tput bold) $(tput setaf 1) ${1} $(tput sgr0) "\n";
+    return 0;
 }
 
 function command_exists () {
@@ -27,7 +28,7 @@ if [[ $EUID = 0 ]]; then
 fi
 
 $ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
-while \read  -r -n 1 -s answer; do
+while \read -r -n 1 -s answer; do
   if [[ ${answer} = [YyNn] ]]; then
     if [[ ! ${answer} =~ ^[Yy]$ ]]; then
       $ECHO "You selected ${answer} so exiting"
