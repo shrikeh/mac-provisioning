@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Colour _echo to make it easier to read
 function _echo () {
-    echo "\n" $(tput bold) $(tput setaf 1) ${1} $(tput sgr0) "\n";
+    \echo "\n" $(tput bold) $(tput setaf 1) ${1} $(tput sgr0) "\n";
 }
 
 function command_exists () {
-	command -v ${1} > /dev/null 2>&1 || {
-		return 1;
-	}
+    \command -v ${1} > /dev/null 2>&1 || {
+      return 1;
+    }
 }
 
 ECHO=_echo
@@ -27,9 +27,10 @@ if [[ $EUID = 0 ]]; then
 fi
 
 $ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
-read -r -s -e -p "(y/n) > " -n 1 REPLY
+\read -r  -e -p "(y/n) > " -n 1 cont
 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+if [[ ! ${cont} =~ ^[Yy]$ ]]; then
+    $ECHO "You selected ${cont} so exiting"
     exit 1;
 fi
 
@@ -39,16 +40,20 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 
 
 $ECHO "Do you wish to generate a new SSH key?";
-read -r -s -e -p "(y/n) > " -n 1 REPLY
+\read -r -s -e -p "(y/n) > " -n 1 sshgen
+
 # (optional) move to a new line;
 
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    ssh-keygen -trsa -b${SSH_PARANOIA};
+if [[ ${sshgen} =~ ^[Yy]$ ]]; then
+    ssh-keygen -t rsa -b ${SSH_PARANOIA};
 fi
 
 # Is this running remotely (i.e. with curl and piped to sh) or has this been downloaded?
 # If not downloaded, we need to get the rest of the archive
 # @todo: check locally if we are in a folder containing the CLT
+
+$ECHO "Downloading Mac OSX Command Tools for Mountain Lion"
+
 \curl -fsSL -o ${ZIP_TARGET} ${REPO_URI};
  
 unzip -o ${ZIP_TARGET} -d ${HOME}/Downloads;
