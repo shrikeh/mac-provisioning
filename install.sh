@@ -11,7 +11,7 @@ function command_exists () {
 }
 
 ECHO=_echo
-REPO_BRANCH=${1:-"develop"}
+REPO_BRANCH=${1:-"master"}
 
 REPO_URI=${2:-"https://github.com/shrikeh/mac-provisioning/archive/${REPO_BRANCH}.zip"}
 ZIP_TARGET=${3:-"${HOME}/Downloads/mac-provisioning.zip"}
