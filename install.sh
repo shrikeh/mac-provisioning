@@ -28,6 +28,7 @@ LOCAL_REPO_DIR=${4:-"${HOME}/Downloads/mac-provisioning-${REPO_BRANCH}"}
 COMPOSER_TARGET="/usr/local/bin/composer"
 SSH_PARANOIA=2048
 OSX_GCC_TARGET=${4:-"/"}
+clrstdin
 ${ECHO} "Welcome to the Mac provisioning script. Press [ENTER] to continue"
 \read -r
 
@@ -40,6 +41,7 @@ fi
   ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
 } <&-
 clrstdin
+
 while \read -r -n 1 answer; do
   if [[ ${answer} = [YyNn] ]]; then
     if [[ ! ${answer} =~ ^[Yy]$ ]]; then
@@ -58,7 +60,7 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 ${ECHO} "Do you wish to generate a new SSH key?";
 clrstdin
 while \read -r -n 1 -s answer; do
-  if [[ ${answer} == [YyNn] ]]; then
+  if [[ ${answer} = [YyNn] ]]; then
     if [[ ${answer} =~ ^[Yy]$ ]]; then
       ssh-keygen -t rsa -b ${SSH_PARANOIA} -N "" -f ${HOME}/.ssh/id_rsa;
       $ECHO "New ssh key generated with ${SSH_PARANOIA} bits and no passphrase"
