@@ -43,7 +43,7 @@ fi
   ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
 } <&-
 
-while \read -e -r -n 1 answer; do
+while \read -e -r  answer; do
   if [[ ${answer} = [YyNn] ]]; then
     if [[ ! ${answer} =~ ^[Yy]$ ]]; then
       ${ECHO} "You selected ${answer} so exiting"
@@ -60,7 +60,7 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 
 ${ECHO} "Do you wish to generate a new SSH key?";
 clrstdin
-while \read -r -n 1 -s answer; do
+while \read -r  -s answer; do
   if [[ ${answer} = [YyNn] ]]; then
     if [[ ${answer} =~ ^[Yy]$ ]]; then
       ssh-keygen -t rsa -b ${SSH_PARANOIA} -N "" -f ${HOME}/.ssh/id_rsa;
