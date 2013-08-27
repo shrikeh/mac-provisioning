@@ -21,10 +21,12 @@ function clrstdin () {
   return 0;
 }
 
-if readlink /proc/$$/fd/0 | grep -q "^pipe:"; then
-  echo "Pipe input:"
-else 
-  echo "Standard input"
+if [ -n "$1" ]; then
+  exec <"$1"
+elif tty >/dev/null; then
+  echo 1>&2 'Cowardly refusing to read data from a terminal.'
+  exit 2
+# else we're reading from a file or pipe
 fi
 
 ECHO=_echo
