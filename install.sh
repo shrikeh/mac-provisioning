@@ -17,6 +17,7 @@ function command_exists () {
 
 function clrstdin () {
   \read -d '' -t 1 -n 10000
+  return 0;
 }
 
 ECHO=_echo
@@ -41,7 +42,7 @@ ${ECHO} "This script requires sudo privileges. You will be prompted for your pas
 } <&-
 clrstdin
 while \read -r -n 1 answer; do
-  if [[ ${answer} == [YyNn] ]]; then
+  if [[ ${answer} = [YyNn] ]]; then
     if [[ ! ${answer} =~ ^[Yy]$ ]]; then
       ${ECHO} "You selected ${answer} so exiting"
       exit 1;
