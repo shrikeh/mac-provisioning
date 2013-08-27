@@ -40,10 +40,10 @@ fi
 ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
 } <&-
 clrstdin
-while \read -r -n 1 -s answer; do
+while \read -r -n 1 answer; do
   if [[ ${answer} == [YyNn] ]]; then
     if [[ ! ${answer} =~ ^[Yy]$ ]]; then
-      $ECHO "You selected ${answer} so exiting"
+      ${ECHO} "You selected ${answer} so exiting"
       exit 1;
     fi
     break;
