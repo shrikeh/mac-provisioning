@@ -29,6 +29,10 @@ if [[ $EUID = 0 ]]; then
    exit 1;
 fi
 
+while \read -r -n 1 -t 1; do
+  break
+done
+
 $ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
 while \read -r -n 1 -s answer; do
   if [[ ${answer} = [YyNn] ]]; then
