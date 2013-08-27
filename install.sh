@@ -23,23 +23,23 @@ OSX_GCC_TARGET=${4:-"/"}
 # Check we aren't runniing as root as this will mess everything up"
 if [[ $EUID = 0 ]]; 
 then
-   $ECHO "This script must not be run as root" 1>&2
-   exit 1
+   $ECHO "This script must not be run as root" 1>&2;
+   exit 1;
 fi
 
 $ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue? (y/n)"
-read -n 1 -r
+read -n 1 -r;
 if [[ ! $REPLY =~ ^[Yy]$ ]]; 
 then
-    exit 1
+    exit 1;
 fi
 
 # Show all hidden files on a mac
 $ECHO "Making all hidden files visible in Finder"
 defaults write com.apple.Finder AppleShowAllFiles YES
 
-$ECHO "Do you wish to generate a new SSH key? (y/n)"
-read -n 1 -r
+$ECHO "Do you wish to generate a new SSH key? (y/n)";
+read -n 1 -r;
     # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]];
 then
@@ -51,67 +51,69 @@ fi
 # @todo: check locally if we are in a folder containing the CLT
 \curl -fsSL -o ${ZIP_TARGET} ${REPO_URI};
  
-unzip -o ${ZIP_TARGET} -d ${HOME}/Downloads
+unzip -o ${ZIP_TARGET} -d ${HOME}/Downloads;
 sudo installer -pkg ${LOCAL_REPO_DIR}/clt/clt-ml.pkg -target ${OSX_GCC_TARGET};
 
 
 # Get hold of Ruby
-if command_exists "rvm" 
+if command_exists "rvm"; 
 then
-    $ECHO "Existing RVM found , moving on"
+    $ECHO "Existing RVM found , moving on";
 else
-  $ECHO "Getting hold of latest stable Ruby RVM"
-  \curl -L https://get.rvm.io | bash -s stable --autolibs=read-fail --auto-dotfiles
-  source ~/.rvm/scripts/rvm
+  $ECHO "Getting hold of latest stable Ruby RVM";
+  \curl -L https://get.rvm.io | bash -s stable --autolibs=read-fail --auto-dotfiles;
+  source ~/.rvm/scripts/rvm;
 
-  rvm install ruby
-  type rvm | head -1
+  rvm install ruby;
+  type rvm | head -1;
 fi
 
 # Get hold of Homebrew
-if command_exists "brew"
+if command_exists "brew";
 then
-    $ECHO "Detected existing install of Homebrew, moving on..."
+    $ECHO "Detected existing install of Homebrew, moving on...";
 else
-    $ECHO "Getting Homebrew"
-    ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)"
+    $ECHO "Getting Homebrew";
+    ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)";
 fi;
 
-rvm autolibs homebrew
+rvm autolibs homebrew;
 
-$ECHO "Installing Heroku (gives you Git etc)"
-brew install --force heroku-toolbelt
+$ECHO "Installing Heroku (gives you Git etc)";
+brew install --force heroku-toolbelt;
 
 $ECHO "Configuring git"
-if ! git config user.email
+if ! git config user.email;
 then
   $ECHO "Please input your email address"
-  read email
-  git config --global user.email ${email}
+  read email;
+  git config --global user.email ${email};
 fi
-if ! git config user.name
+if ! git config user.name;
 then
-  $ECHO "Please input your first and last name"
-  read first_name last_name
-  git config --global user.name "${first_name} ${last_name}"
+  $ECHO "Please input your first and last name";
+  read first_name last_name;
+  git config --global user.name "${first_name} ${last_name}";
 fi
 
-brew install --force wget libksba autoconf gmp4 gmp mpfr mpc automake
+brew install --force wget libksba autoconf gmp4 gmp mpfr mpc automake;
 
 # Python
 $ECHO "Installing python"
-brew install --force python
-pip install virtualenv virtualenvwrapper shyaml
+brew install --force python;
+pip install virtualenv virtualenvwrapper shyaml;
 
-$ECHO "Installing ssh-copy-id"
+$ECHO "Installing ssh-copy-id";
 brew install --force ssh-copy-id
 
 $ECHO "Getting zsh"
-brew install zsh zsh-completions
+brew install zsh zsh-completions;
 curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
 echo "fpath=(/usr/local/share/zsh-completions \$fpath)" >> $HOME/.zshrc
 
-$ECHO "Installing slick git tools"
+source $HOME/.zshrc
+
+$ECHO "Installing slick git tools";
 brew install --force gist hub hubflow
 pip install git_sweep
 if [ ! -f ${HOME}/.config/hub ];
@@ -133,27 +135,27 @@ brew install --force php55
 
 $ECHO "Getting composer"
 \curl -sS https://getcomposer.org/installer | php
-mv composer.phar ${COMPOSER_TARGET}
+mv composer.phar ${COMPOSER_TARGET};
 $ECHO "Composer installed globally at ${COMPOSER_TARGET}"
 
 # Get hold of cask
 $ECHO "Installing Cask"
-brew untap phinze/homebrew-cask
-brew tap phinze/homebrew-cask
-brew update
-brew install brew-cask
-brew update
+brew untap phinze/homebrew-cask;
+brew tap phinze/homebrew-cask;
+brew update;
+brew install brew-cask;
+brew update;
 
 #Iterate through the manifest and install everything in there.
 
 $ECHO "Reading through the Cask manifest"
 while read app; do
   $ECHO "Installing ${app}"
-  brew cask install --force ${app}
+  brew cask install --force ${app};
 done < ${LOCAL_REPO_DIR}/manifest.txt
 
-brew linkapps
-brew cask linkapps
-brew cask alfred link
+brew linkapps;
+brew cask linkapps;
+brew cask alfred link;
 
 $ECHO "Job done"
