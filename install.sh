@@ -21,14 +21,15 @@ SSH_PARANOIA=2048
 OSX_GCC_TARGET=${4:-"/"}
 
 # Check we aren't runniing as root as this will mess everything up"
-if [[ $EUID = 0 ]]; then
+if [[ $EUID = 0 ]]; 
+then
    $ECHO "This script must not be run as root" 1>&2
    exit 1
 fi
 
 $ECHO "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue? (y/n)"
 read -n 1 -r
-if [[ ! $REPLY =~ ^[Yy]$ ]]
+if [[ ! $REPLY =~ ^[Yy]$ ]]; 
 then
     exit 1
 fi
@@ -40,11 +41,14 @@ defaults write com.apple.Finder AppleShowAllFiles YES
 $ECHO "Do you wish to generate a new SSH key? (y/n)"
 read -n 1 -r
     # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]
+if [[ $REPLY =~ ^[Yy]$ ]];
 then
     ssh-keygen -trsa -b${SSH_PARANOIA};
 fi
 
+# Is this running remotely (i.e. with curl and piped to sh) or has this been downloaded?
+# If not downloaded, we need to get the rest of the archive
+# @todo: check locally if we are in a folder containing the CLT
 \curl -fsSL -o ${ZIP_TARGET} ${REPO_URI};
  
 unzip -o ${ZIP_TARGET} -d ${HOME}/Downloads
