@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # Colour _echo to make it easier to read
 function _echo () {
   {
@@ -16,7 +16,7 @@ function command_exists () {
 }
 
 function clrstdin () {
-  \read -d '' -t 0 -n 10000
+  \read -d '' -t 0.1 -n 10000
 }
 
 ECHO=_echo
