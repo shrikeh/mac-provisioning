@@ -28,6 +28,8 @@ LOCAL_REPO_DIR=${4:-"${HOME}/Downloads/mac-provisioning-${REPO_BRANCH}"}
 COMPOSER_TARGET="/usr/local/bin/composer"
 SSH_PARANOIA=2048
 OSX_GCC_TARGET=${4:-"/"}
+${ECHO} "Welcome to the Mac provisioning script. Press [ENTER] to continue"
+\read -r
 
 # Check we aren't runniing as root as this will mess everything up"
 if [[ $EUID = 0 ]]; then
