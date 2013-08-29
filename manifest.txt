@@ -4,6 +4,7 @@ alfred
 airfoil
 calibre
 charles
+chromium
 clamxav
 dropbox
 eclipse-ide
@@ -12,12 +13,15 @@ evernote
 fantastical
 firefox
 gas-mask
+github
+gitx-l
 google-chrome
 google-chrome-canary
 google-drive
 google-earth
 google-hangouts
 google-notifier
+handbrake
 istat-menus
 iterm2
 kindle

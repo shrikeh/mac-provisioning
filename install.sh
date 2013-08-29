@@ -53,7 +53,7 @@ ${ECHO} ${REPO_BRANCH}
 
 # The URI of the repo to get hold of the CLT from
 REPO_URI="https://github.com/shrikeh/mac-provisioning/archive/${REPO_BRANCH}.zip";
-
+MANIFEST_URI="https://raw.github.com/shrikeh/mac-provisioning/${REPO_BRANCH}/manifest.txt"
 ZIP_TARGET="${HOME}/Downloads/mac-provisioning.zip"
 
 LOCAL_REPO_DIR="${HOME}/Downloads/mac-provisioning-${REPO_BRANCH}"
@@ -84,6 +84,14 @@ do
         fail "--branch must be followed by a branch name."
       fi
       ;;
+    --manifest-uri)
+      if [[ -n "${1:-}" ]];
+      then
+        MANIFEST_URI="${1}"
+        shift
+      else
+        fail "--user must be followed by a user name."
+      fi
     --generate-ssh-key)
       GENERATE_SSH_KEY=true
     ;;
@@ -197,8 +205,8 @@ fi
   ${ECHO} "Installing python"
   brew install ${FORCE_INSTALL} python --framework;
   export PATH=/usr/local/share/python:$PATH
-  
-  pip install virtualenv virtualenvwrapper yaml shyaml;
+
+  pip install virtualenv virtualenvwrapper PyYAML shyaml;
 
   ${ECHO} "Installing autossh, mosh, and ssh-copy-id";
   brew install ${FORCE_INSTALL} autossh mobile-shell ssh-copy-id
@@ -274,13 +282,14 @@ echo "eval \"\$(hub alias -s)\"" >> ${HOME}/.zshrc
 
   #Iterate through the manifest and install everything in there.
 
-  ${ECHO} "Reading through the Cask manifest"
+  ${ECHO} "Reading through the Cask manifest from ${MANIFEST_URI}"
+  MANIFEST=$(\curl -L ${MANIFEST_URI})
 } <&-
 
 while read app; do
   ${ECHO} "Installing ${app}"
   brew cask ${FORCE_INSTALL} install ${app};
-done < ${LOCAL_REPO_DIR}/manifest.txt
+done < $MANIFEST
 
 brew linkapps;
 brew cask alfred link;
