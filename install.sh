@@ -10,90 +10,158 @@ function _echo () {
   } <&-
 }
 
+# Confirm if a command exists
 function command_exists () {
     \command -v ${1} > /dev/null 2>&1 || {
       return 1;
     }
 }
-
+# Clear out stdin before taking fresh input
 function clrstdin () {
   \read -d '' -t 0 -n 10000
   return 0;
 }
 
+# Are we being run as a normal bash script or being piped?
 if [ -n "$1" ]; then
   exec <"$1"
 elif tty >/dev/null; then
-  echo 1>&2 'Cowardly refusing to read data from a terminal.'
-  exit 2
+  NON_INTERACTIVE=false
 # else we're reading from a file or pipe
 else
-  echo "Piped"
+  NON_INTERACTIVE=true
 fi
 
+# Substitute echo for our _echo
 ECHO=_echo
-REPO_BRANCH=${1:-"master"}
 
-REPO_URI=${2:-"https://github.com/shrikeh/mac-provisioning/archive/${REPO_BRANCH}.zip"}
-ZIP_TARGET=${3:-"${HOME}/Downloads/mac-provisioning.zip"}
-LOCAL_REPO_DIR=${4:-"${HOME}/Downloads/mac-provisioning-${REPO_BRANCH}"}
+ if [[ $EUID = 0 ]]; then
+   ${ECHO} "Script is running with sudo" 1>&2;
+   BASE_USER=${SUDO_USER}
+   ROOT_PRIVS=true
+ else
+   BASE_USER=${USER}
+   ROOT_PRIVS=false
+ fi
+
+
+
+echo $branch
+REPO_BRANCH=${branch:-"master"}
+${ECHO} ${REPO_BRANCH}
+
+
+# The URI of the repo to get hold of the CLT from
+REPO_URI="https://github.com/shrikeh/mac-provisioning/archive/${REPO_BRANCH}.zip";
+
+ZIP_TARGET="${HOME}/Downloads/mac-provisioning.zip"
+
+LOCAL_REPO_DIR="${HOME}/Downloads/mac-provisioning-${REPO_BRANCH}"
+
 COMPOSER_TARGET="/usr/local/bin/composer"
 SSH_PARANOIA=2048
 OSX_GCC_TARGET=${4:-"/"}
-clrstdin
-${ECHO} "Welcome to the Mac provisioning script. Press [ENTER] to continue"
-\read -r
+FORCE_INSTALL=""
 
-# Check we aren't runniing as root as this will mess everything up
-if [[ $EUID = 0 ]]; then
-   ${ECHO} "This script must not be run as root" 1>&2;
-   exit 1;
+while (( $# > 0 ))
+do
+  token="${1}"
+  shift
+  case "${token}" in
+    --non-interactive)
+      AUTH_NON_INTERACTIVE=true
+      ;;
+    --force-installs)
+       FORCE_INSTALL="--force"
+      ;;
+    --branch|branch)
+      if [[ -n "${1:-}" ]];
+      then
+        version="head"
+        branch="${1}"
+        shift
+      else
+        fail "--branch must be followed by a branch name."
+      fi
+      ;;
+    --generate-ssh-key)
+      GENERATE_SSH_KEY=true
+    ;;
+    --user)
+      if [[ -n "${1:-}" ]];
+      then
+        BASE_USER="${1}"
+        shift
+      else
+        fail "--user must be followed by a user name."
+      fi
+      ;;
+    --user)
+  esac
+done
+
+if ${NON_INTERACTIVE}; then
+  ${ECHO} "Running in non-interactive mode"
+  if ! ${ROOT_PRIVS}; then
+    ${ECHO} "You are running this non-interactively but without sudo, which can't happen. Exiting."
+    exit 1;
+  fi
+else
+  clrstdin
+  ${ECHO} "Welcome to the Mac provisioning script. Press [ENTER] to continue"
+  \read -r
+
+  {
+    ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
+  } <&-
+
+  while \read -e -r -n 1 answer; do
+    if [[ ${answer} = [YyNn] ]]; then
+      if [[ ! ${answer} =~ ^[Yy]$ ]]; then
+        ${ECHO} "You selected ${answer} so exiting"
+        exit 1;
+      fi
+      break;
+    fi
+  done
 fi
-{
-  ${ECHO} "This script requires sudo privileges. You will be prompted for your password. Do you wish to continue?";
-} <&-
 
-while \read -e -r  answer; do
-  if [[ ${answer} = [YyNn] ]]; then
-    if [[ ! ${answer} =~ ^[Yy]$ ]]; then
-      ${ECHO} "You selected ${answer} so exiting"
-      exit 1;
-    fi
-    break;
-  fi
-done
-
-${ECHO} "OK, on with the show..."
-# Show all hidden files on a mac
-$ECHO "Making all hidden files visible in Finder"
-defaults write com.apple.Finder AppleShowAllFiles YES
-
-${ECHO} "Do you wish to generate a new SSH key?";
-clrstdin
-while \read -r  -s answer; do
-  if [[ ${answer} = [YyNn] ]]; then
-    if [[ ${answer} =~ ^[Yy]$ ]]; then
-      ssh-keygen -t rsa -b ${SSH_PARANOIA} -N "" -f ${HOME}/.ssh/id_rsa;
-      $ECHO "New ssh key generated with ${SSH_PARANOIA} bits and no passphrase"
-    fi
-    break;
-  fi
-done
-
-
-# Is this running remotely (i.e. with curl and piped to sh) or has this been downloaded?
-# If not downloaded, we need to get the rest of the archive
-# @todo: check locally if we are in a folder containing the CLT
 {
   if [[ ! -e ${ZIP_TARGET} ]]; then
     ${ECHO} "Downloading Mac OSX Command Tools for Mountain Lion"
     \curl -fsSL -o ${ZIP_TARGET} ${REPO_URI};
-  fi 
+  fi
   ${ECHO} "Unzipping Command line tools into your Downloads dir"
   \unzip -o ${ZIP_TARGET} -d ${HOME}/Downloads;
   ${ECHO} "Installing command line tools, please wait..."
   sudo installer -pkg ${LOCAL_REPO_DIR}/clt/clt-ml.pkg -target ${OSX_GCC_TARGET};
   ${ECHO} "CLT installed"
+} <&-
+
+${ECHO} "OK, on with the show..."
+# Show all hidden files on a mac
+${ECHO} "Making all hidden files visible in Finder"
+defaults write com.apple.Finder AppleShowAllFiles YES
+
+if ! ${NON_INTERACTIVE}; then
+  ${ECHO} "Do you wish to generate a new SSH key?";
+  clrstdin
+  while \read -r -n 1 -s answer; do
+    if [[ ${answer} = [YyNn] ]]; then
+      if [[ ${answer} =~ ^[Yy]$ ]]; then
+        GENERATE_SSH_KEY=true
+      else
+        GENERATE_SSH_KEY=false
+      fi
+      break;
+    fi
+  done
+fi
+{
+  if ${GENERATE_SSH_KEY}; then
+    #ssh-keygen -t rsa -b ${SSH_PARANOIA} -N "" -f ${HOME}/.ssh/id_rsa;
+    ${ECHO} "New ssh key generated with ${SSH_PARANOIA} bits and no passphrase"
+  fi
 
   # Get hold of Ruby
   if command_exists "rvm"; then
@@ -110,45 +178,30 @@ done
 
   # Get hold of Homebrew
   if command_exists "brew"; then
-    $ECHO "Detected existing install of Homebrew, moving on...";
+    ${ECHO} "Detected existing install of Homebrew, moving on...";
   else
-    $ECHO "Getting Homebrew";
+    ${ECHO} "Getting Homebrew";
     ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)";
   fi;
 
   rvm autolibs homebrew;
 
   ${ECHO} "Installing Heroku (gives you Git etc)";
-  brew install heroku-toolbelt;
-
-  ${ECHO} "Configuring git"
-  git config --global core.autocrlf input
+  brew install ${FORCE_INSTALL} heroku-toolbelt;
 } <&-
-if ! git config user.email; then
-  ${ECHO} "Please input your email address"
-  clrstdin
-  while \read -r email; do
-    git config --global user.email ${email};
-  done;
-fi
-if ! git config user.name; then
-  ${ECHO} "Please input your first and last name";
-  clrstdin
-  while \read -r first_name last_name; do
-    git config --global user.name "${first_name} ${last_name}";
-  done;
-fi;
 
 {
-  brew install wget libksba autoconf gmp4 gmp mpfr mpc automake;
+  brew install ${FORCE_INSTALL} wget libksba autoconf gmp4 gmp mpfr mpc automake;
 
   # Python
   ${ECHO} "Installing python"
-  brew install python;
-  pip install virtualenv virtualenvwrapper shyaml;
+  brew install ${FORCE_INSTALL} python --framework;
+  export PATH=/usr/local/share/python:$PATH
+  
+  pip install virtualenv virtualenvwrapper yaml shyaml;
 
-  ${ECHO} "Installing ssh-copy-id";
-  brew install ssh-copy-id
+  ${ECHO} "Installing autossh, mosh, and ssh-copy-id";
+  brew install ${FORCE_INSTALL} autossh mobile-shell ssh-copy-id
 
   ${ECHO} "Getting zsh"
   brew install zsh zsh-completions;
@@ -157,43 +210,66 @@ fi;
 
 
   ${ECHO} "Installing slick git tools";
-  brew install gist hub hubflow
+  brew install ${FORCE_INSTALL} gist hub hubflow
   pip install git_sweep
 } <&-
 
 if [ ! -f ${HOME}/.config/hub ]; then
-  $ECHO "Please input your github username"
-  clrstdin
-  while \read -r username; do
-    mkdir ${HOME}/.config
-    echo "eval \"\$(hub alias -s)\"" >> ${HOME}/.zshrc
-    echo "github.com: \n  - user: ${username}" > ${HOME}/.config/hub
-  done;
+  mkdir ${HOME}/.config
+  touch ${HOME}/.config/hub
 fi
+
+if ! ${NON_INTERACTIVE}; then
+  ${ECHO} "Configuring git"
+  
+  if ! git config user.email; then
+    ${ECHO} "Please input your email address"
+    clrstdin
+    \read -r GIT_EMAIL
+  fi
+  if ! git config user.name; then
+    ${ECHO} "Please input your first and last name";
+    clrstdin
+    while \read -r first_name last_name; do
+      GIT_NAME="${first_name} ${last_name}"
+    done;
+  fi;
+  ${ECHO} "Please input your github username"
+  while \read -r username; do
+    GIT_USERNAME=${username}
+  done
+fi;
+
+git config --global core.autocrlf input
+git config --global user.email "${GIT_EMAIL}";
+git config --global user.name "${GIT_NAME}";
+
+echo "github.com: \n  - user: ${GIT_USERNAME}" > ${HOME}/.config/hub
+echo "eval \"\$(hub alias -s)\"" >> ${HOME}/.zshrc
+
 {
   ${ECHO} "Installing PHP..."
   brew untap homebrew/dupes
-  brew tap homebrew/dupes
   brew untap josegonzalez/homebrew-php
+  brew untap josegonzalez/php
+
+  brew tap homebrew/dupes
   brew tap josegonzalez/homebrew-php
+  brew tap josegonzalez/php
+
   brew update
-  brew install --force php55
+  brew install ${FORCE_INSTALL} php55 php55-xhprof php55-xdebug composer
 
   echo "export PATH=\"\$(brew --prefix php55)/bin:$PATH\"" >> ${HOME}/.zshrc
 
   source ${HOME}/.zshrc
 
-  ${ECHO} "Getting composer"
-  \curl -sS https://getcomposer.org/installer | php
-  mv composer.phar ${COMPOSER_TARGET};
-  ${ECHO} "Composer installed globally at ${COMPOSER_TARGET}"
-
   # Get hold of cask
-  $ECHO "Installing Cask"
+  ${ECHO} "Installing Cask"
   brew untap phinze/homebrew-cask;
   brew tap phinze/homebrew-cask;
   brew update;
-  brew install brew-cask;
+  brew install ${FORCE_INSTALL} brew-cask;
   brew update;
 
   #Iterate through the manifest and install everything in there.
@@ -202,12 +278,11 @@ fi
 } <&-
 
 while read app; do
-  $ECHO "Installing ${app}"
-  brew cask install ${app};
+  ${ECHO} "Installing ${app}"
+  brew cask ${FORCE_INSTALL} install ${app};
 done < ${LOCAL_REPO_DIR}/manifest.txt
 
 brew linkapps;
-brew cask linkapps;
 brew cask alfred link;
 
-$ECHO "Job done"
+${ECHO} "Job done"
