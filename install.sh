@@ -92,6 +92,7 @@ do
       else
         fail "--user must be followed by a user name."
       fi
+      ;;
     --generate-ssh-key)
       GENERATE_SSH_KEY=true
     ;;
@@ -192,9 +193,10 @@ fi
     ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go)";
   fi;
 
+  # Set up rvm to use homebrew for dependencies
   rvm autolibs homebrew;
 
-  ${ECHO} "Installing Heroku (gives you Git etc)";
+  ${ECHO} "Installing Heroku (gives you Git, foreman etc)";
   brew install ${FORCE_INSTALL} heroku-toolbelt;
 } <&-
 
